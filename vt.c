@@ -996,6 +996,14 @@ static void interpret_csi(Vt *t)
 	const char *p = t->ebuf + 1;
 	char verb = t->ebuf[t->elen - 1];
 
+	/* Ignore CSI sequences carrying a private prefix other than '?',
+	 * i.e. '<', '=' and '>'. None of them are implemented here, and
+	 * parsing on regardless drops the prefix and reads what follows as
+	 * ordinary parameters: the XTMODKEYS reset CSI > 4 m then arrives as
+	 * SGR 4 and turns underline on for the rest of the buffer's life. */
+	if (t->ebuf[1] == '<' || t->ebuf[1] == '=' || t->ebuf[1] == '>')
+		return;
+
 	/* parse numeric parameters */
 	for (p += (t->ebuf[1] == '?'); *p; p++) {
 		if (IS_CONTROL(*p)) {
