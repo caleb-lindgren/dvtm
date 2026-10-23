@@ -652,7 +652,11 @@ term_urgent_handler(Vt *term) {
 
 static void
 move_client(Client *c, int x, int y) {
-	if (c->x == x && c->y == y)
+	int cur_x, cur_y;
+	/* resizeterm() also moves windows on hidden tags, which arrange()
+	 * does not see, so c->x and c->y can be stale: check curses too */
+	getbegyx(c->window, cur_y, cur_x);
+	if (c->x == x && c->y == y && cur_x == x && cur_y == y)
 		return;
 	debug("moving, x: %d y: %d\n", x, y);
 	if (mvwin(c->window, y, x) == ERR) {
@@ -666,7 +670,11 @@ move_client(Client *c, int x, int y) {
 static void
 resize_client(Client *c, int w, int h) {
 	bool has_title_line = show_border();
-	bool resize_window = c->w != w || c->h != h;
+	int cur_w, cur_h;
+	/* as in move_client(), resizeterm() may have resized the window */
+	getmaxyx(c->window, cur_h, cur_w);
+	bool resize_window = c->w != w || c->h != h ||
+	                     cur_w != w || cur_h != h;
 	if (resize_window) {
 		debug("resizing, w: %d h: %d\n", w, h);
 		if (wresize(c->window, h, w) == ERR) {
