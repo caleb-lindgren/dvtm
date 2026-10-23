@@ -17,7 +17,8 @@ out="$here/logs/redraw"
 mkdir -p "$out"
 rm -f "$out"/typescript "$out"/timing "$out"/exit.txt
 
-dvtm=${DVTM:-$(command -v dvtm)}
+# Not $DVTM: dvtm exports that to its children, set to its version string.
+dvtm=${DVTM_BIN:-$(command -v dvtm)}
 
 {
 	echo "date: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
