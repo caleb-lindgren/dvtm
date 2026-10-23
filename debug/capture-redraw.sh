@@ -12,6 +12,15 @@
 #   exit.txt     dvtm's exit status
 
 set -u
+
+# Inside dvtm, TERM is dvtm's own and the outer dvtm takes the MOD key, so
+# quitting the capture quits the outer session instead.
+if [ -n "${DVTM-}" ]; then
+	echo "capture-redraw: run this outside dvtm (and abduco)," \
+		"from a plain shell in the terminal emulator" >&2
+	exit 1
+fi
+
 here=$(cd "$(dirname "$0")/.." && pwd)
 out="$here/logs/redraw"
 mkdir -p "$out"
