@@ -671,11 +671,12 @@ static void
 resize_client(Client *c, int w, int h) {
 	bool has_title_line = show_border();
 	int cur_w, cur_h;
-	/* as in move_client(), resizeterm() may have resized the window */
+	/* as in move_client(), resizeterm() may have resized the window,
+	 * dropping the cells it cut off; the vt still has them, unchanged,
+	 * since the application is only resized when c->w or c->h change */
 	getmaxyx(c->window, cur_h, cur_w);
-	bool resize_window = c->w != w || c->h != h ||
-	                     cur_w != w || cur_h != h;
-	if (resize_window) {
+	bool resize_app = c->w != w || c->h != h;
+	if (resize_app || cur_w != w || cur_h != h) {
 		debug("resizing, w: %d h: %d\n", w, h);
 		if (wresize(c->window, h, w) == ERR) {
 			eprint("error resizing, w: %d h: %d\n", w, h);
@@ -683,8 +684,10 @@ resize_client(Client *c, int w, int h) {
 			c->w = w;
 			c->h = h;
 		}
+		/* vt_draw() only paints dirty rows */
+		vt_dirty(c->term);
 	}
-	if (resize_window || c->has_title_line != has_title_line) {
+	if (resize_app || c->has_title_line != has_title_line) {
 		c->has_title_line = has_title_line;
 		vt_resize(c->app, h - has_title_line, w);
 		if (c->editor)
