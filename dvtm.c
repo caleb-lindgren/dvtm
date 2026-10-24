@@ -773,6 +773,12 @@ resize_screen(void) {
 	debug("resize_screen(), w: %d h: %d\n", screen.w, screen.h);
 
 	resizeterm(screen.h, screen.w);
+	/* resizeterm() drops the cells it cuts off every window, including
+	 * those on hidden tags, and on growing again it may restore a window
+	 * to exactly its old size, which resize_client() then cannot tell
+	 * apart from an untouched one: repaint all of them from the vt */
+	for (Client *c = clients; c; c = c->next)
+		vt_dirty(c->term);
 	wresize(stdscr, screen.h, screen.w);
 	updatebarpos();
 	clear();
